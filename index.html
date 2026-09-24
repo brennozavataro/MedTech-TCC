@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel — MedTech</title>
+
+    <!-- Define o tema salvo antes de carregar o CSS, para não piscar -->
+    <script src="home.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="home.css">
+</head>
+<body>
+
+    <!-- Header / Barra de Navegação (igual em todas as páginas) -->
+    <header class="navbar" id="navbar"><div class="header-container"><div class="header-left"><a href="index.html" class="logo">Med<span>Tech</span></a><nav class="nav-links" id="navLinks"><a href="index.html" data-page="index" class="active" aria-current="page">Painel</a><a href="quemsomos.html" data-page="quemsomos">Quem somos</a><a href="dispositivos.html" data-page="dispositivos">Dispositivos</a><a href="referencias.html" data-page="referencias">Referências</a><a href="jogo.html" data-page="jogo">Jogo</a></nav></div><div class="header-right"><button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema claro e escuro" title="Alternar tema"><span class="theme-toggle-icon icon-sun"></span><span class="theme-toggle-icon icon-moon"></span></button><a class="header-account" href="cadastrar.html">Cadastrar</a><button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="navLinks"><span class="menu-toggle-bar"></span><span class="menu-toggle-bar"></span><span class="menu-toggle-bar"></span></button></div></div></header>
+
+    <main class="main-container">
+        <!-- Hero Section -->
+        <section class="hero-container">
+            <div class="conteudo-texto">
+                <h1>Elimine o erro <br> humano.</h1>
+                <h1 class="part1">Proteja quem <br> você ama.</h1>
+
+                <p>Precisão clínica aliada ao cuidado domiciliar. Gerenciamento automatizado de medicamentos projetado para evitar erros, economizar tempo e proporcionar tranquilidade total para as famílias.</p>
+
+                <div class="botoes">
+                    <a class="btn-primary" href="dispositivos.html">Explorar dispositivos</a>
+                    <a class="btn-secondary" href="jogo.html">Conhecer o jogo</a>
+                </div>
+            </div>
+
+            <div class="produto">
+                <img src="./images/produtoTCC.png" alt="Conceito visual do dispensador MedTech" loading="eager" onerror="this.style.display='none'">
+            </div>
+        </section>
+
+        <!-- Cards de Recursos -->
+        <section class="features-grid">
+            <div class="feature-card">
+                <div class="icon-box">01</div>
+                <h3>Planejamento de doses</h3>
+                <p>O protótipo organiza horários e busca reduzir esquecimentos. O controle de estoque depende de implementação e testes.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="icon-box">02</div>
+                <h3>Dispensação automatizada</h3>
+                <p>O ESP32 coordena a liberação de comprimidos e a bomba para líquidos. A precisão precisa ser validada em testes.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="icon-box">03</div>
+                <h3>Rastreamento em tempo real</h3>
+                <p>O acompanhamento pelo aplicativo e as notificações aos responsáveis estão previstos no projeto.</p>
+            </div>
+        </section>
+
+        <!-- Para quem é o MedTech? -->
+        <section class="target-section">
+            <h2>Para quem é o MedTech?</h2>
+            <p class="subtitle">Cuidado personalizado para cada jornada médica.</p>
+
+            <div class="tab-container">
+                <div class="tabs-header">
+                    <button class="tab-btn active">Cuidadores Familiares</button>
+                </div>
+
+                <div class="tab-content">
+                    <div class="tab-text">
+                        <h3>Visibilidade total para as famílias.</h3>
+                        <p>Cuidando de um pai ou mãe à distância? O MedTech envia notificações instantâneas quando as doses são tomadas ou esquecidas, permitindo que você aja imediatamente sem precisar monitorar o tempo todo.</p>
+
+                        <ul class="feature-list">
+                            <li><span class="check-icon">✓</span> Alertas sonoros e visuais</li>
+                            <li><span class="check-icon">✓</span> Registro de doses previsto</li>
+                            <li><span class="check-icon">✓</span> Acompanhamento pelo aplicativo previsto</li>
+                        </ul>
+                    </div>
+                    <div class="tab-image">
+                        <img src="./images/family.jpg" alt="Família reunida" loading="lazy" onerror="this.style.display='none'">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer (igual em todas as páginas) -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <p>© 2026 MedTech · Projeto acadêmico 31C TI</p>
+            <nav class="footer-links">
+                
+                
+                
+            </nav>
+        </div>
+    </footer>
+
+</body>
+</html>

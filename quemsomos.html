@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quem somos | MedTech</title>
+
+    <!-- Define o tema salvo antes de carregar o CSS, para não piscar -->
+    <script src="quemsomos.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="quemsomos.css">
+</head>
+<body>
+
+    <!-- Header / Barra de Navegação (igual em todas as páginas) -->
+    <header class="navbar" id="navbar"><div class="header-container"><div class="header-left"><a href="index.html" class="logo">Med<span>Tech</span></a><nav class="nav-links" id="navLinks"><a href="index.html" data-page="index">Painel</a><a href="quemsomos.html" data-page="quemsomos" class="active" aria-current="page">Quem somos</a><a href="dispositivos.html" data-page="dispositivos">Dispositivos</a><a href="referencias.html" data-page="referencias">Referências</a><a href="jogo.html" data-page="jogo">Jogo</a></nav></div><div class="header-right"><button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema claro e escuro" title="Alternar tema"><span class="theme-toggle-icon icon-sun"></span><span class="theme-toggle-icon icon-moon"></span></button><a class="header-account" href="cadastrar.html">Cadastrar</a><button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="navLinks"><span class="menu-toggle-bar"></span><span class="menu-toggle-bar"></span><span class="menu-toggle-bar"></span></button></div></div></header>
+
+    <main class="main-container">
+
+        <!-- Nossa História -->
+        <section class="about-hero">
+            <div class="about-hero-text">
+                <span class="eyebrow">Projeto acadêmico</span>
+                <h1>Nossa História</h1>
+                <p>O MedTech é um projeto de conclusão de curso da turma 31C TI do UNASP. Desenvolvemos um dispensador de medicamentos com alertas e acompanhamento por aplicativo para apoiar pacientes e cuidadores. O protótipo ainda precisa de testes.</p>
+            </div>
+            <div class="about-hero-image">
+                <img src="./images/Border.jpg" alt="Imagem de referência do projeto MedTech" loading="lazy" onerror="this.style.display='none'">
+            </div>
+        </section>
+
+        <!-- Nossa equipe -->
+        <section class="team-section">
+            <h2>Nossa equipe</h2>
+
+            <div class="team-grid">
+<div class="team-card"><div class="team-avatar" aria-hidden="true">BS<img src="./images/Brenno.jpg" alt="" loading="lazy" onerror="this.style.display='none'"></div><h4>Brenno Sena Zavataro</h4><span>Integrante · 31C TI</span></div>
+<div class="team-card"><div class="team-avatar" aria-hidden="true">PX<img src="./images/Pedro.jpg" alt="" loading="lazy" onerror="this.style.display='none'"></div><h4>Pedro Xavier</h4><span>Integrante · 31C TI</span></div>
+<div class="team-card"><div class="team-avatar" aria-hidden="true">LF<img src="./images/Luan.jpg" alt="" loading="lazy" onerror="this.style.display='none'"></div><h4>Luan Ferreira</h4><span>Integrante · 31C TI</span></div>
+<div class="team-card"><div class="team-avatar" aria-hidden="true">GL<img src="./images/Gustavo.jpg" alt="" loading="lazy" onerror="this.style.display='none'"></div><h4>Gustavo Lima</h4><span>Integrante · 31C TI</span></div>
+<div class="team-card"><div class="team-avatar" aria-hidden="true">DL<img src="./images/Daniel.jpg" alt="" loading="lazy" onerror="this.style.display='none'"></div><h4>Daniel Landim</h4><span>Integrante · 31C TI</span></div>
+<div class="team-card"><div class="team-avatar" aria-hidden="true">GV</div><h4>Gustavo Vinic</h4><span>Integrante · 31C TI</span></div>
+</div>
+        </section>
+
+        <!-- Entre em Contato -->
+        <section class="contact-form-section">
+            <div class="contact-form-card">
+                <h2>Fale com a equipe</h2>
+                <p>Deixe uma mensagem sobre o projeto. O formulário ainda é demonstrativo.</p>
+
+                <form id="contactForm">
+                    <label>
+                        Nome completo
+                        <input type="text" name="nome" placeholder="Seu nome aqui" required>
+                    </label>
+
+                    <label>
+                        E-mail
+                        <input type="email" name="email" placeholder="nome@empresa.com.br" required>
+                    </label>
+
+                    <label>
+                        Mensagem
+                        <textarea name="mensagem" placeholder="Escreva sua mensagem" required></textarea>
+                    </label>
+
+                    <button type="submit" class="btn-primary btn-block">Enviar Mensagem</button>
+                <p id="contactStatus" role="status"></p></form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer (igual em todas as páginas) -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <p>© 2026 MedTech · Projeto acadêmico 31C TI</p>
+            <nav class="footer-links">
+                
+                
+                
+            </nav>
+        </div>
+    </footer>
+
+</body>
+</html>

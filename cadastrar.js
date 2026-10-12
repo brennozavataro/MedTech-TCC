@@ -66,7 +66,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         await MedTechAuth.getClient().auth.signOut();
         throw new Error('A confirmação obrigatória de e-mail precisa ser ativada pelo responsável pelo site.');
       }
-      pendingEmail = email;
+      const savedPassword = form.elements.password.value;
+let checking = false;
+
+const confirmationTimer = setInterval(async () => {
+  if (checking || document.hidden) return;
+  checking = true;
+
+  try {
+    let user = await MedTechAuth.verifiedUser();
+
+    if (!user) {
+      const { error } =
+        await MedTechAuth.getClient().auth.signInWithPassword({
+          email,
+          password: savedPassword
+        });
+
+      if (error) return;
+      user = await MedTechAuth.verifiedUser();
+    }
+
+    if (user) {
+      clearInterval(confirmationTimer);
+      location.replace('dashboard.html');
+    }
+  } catch {
+    // Tenta novamente na próxima verificação.
+  } finally {
+    checking = false;
+  }
+}, 15000);
+
+setTimeout(() => clearInterval(confirmationTimer), 10 * 60 * 1000);
       form.reset();
       card.hidden = true;
       success.hidden = false;

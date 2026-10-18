@@ -1,17 +1,24 @@
 document.addEventListener('DOMContentLoaded', async () => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const { TIME_ZONE, normalizeTimes, nextLabel } = MedTechSchedule;
+  const { TIME_ZONE, WEEKDAYS, ALL_DAYS, normalizeDays, normalizeTimes, nextLabel } = MedTechSchedule;
   const status = $('pageStatus');
   let user, client, saved = null, saving = false, pairing = false, statusPending = false;
   let refreshTimer;
+  let supportsWeekdays = true;
+  const dailyColumns = "medicine_name,times,enabled,updated_at";
+  const weeklyColumns = "medicine_name,times,weekdays,enabled,updated_at";
+  function missingWeekdays(error) {
+    return ["42703", "PGRST204"].includes(error?.code) && /weekdays/i.test((error.message || "") + (error.details || ""));
+  }
+  let linked = false, historyPending = false, historyOffset = 0;
   function message(text, error = false) {
     status.textContent = text;
     status.classList.toggle('is-error', error);
   }
   function readableError(error) {
-    if (['42P01', '42883', 'PGRST202', 'PGRST205'].includes(error?.code)) {
-      return 'O cadastro precisa ser ativado no Supabase. Execute o arquivo supabase/medtech-agenda.sql e recarregue a página.';
+    if (['42P01', '42703', '42883', 'PGRST202', 'PGRST204', 'PGRST205'].includes(error?.code)) {
+      return 'O cadastro precisa ser ativado no Supabase. Confira CONFIGURAR-MEDICAMENTOS.md e aplique a migração adequada e recarregue a página.';
     }
     return 'Não foi possível concluir. Confira sua conexão e tente novamente. Seus dados preenchidos continuam aqui.';
   }
@@ -46,6 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   function renderSaved() {
     $('savedTimes').replaceChildren();
+    $('savedDays').textContent = saved ? (saved.weekdays || ALL_DAYS).map(day => WEEKDAYS[day]).join(' · ') : '';
     if (!saved) {
       $('savedTitle').textContent = 'Nenhum remédio cadastrado';
       $('nextSchedule').textContent = 'Salve sua primeira programação para começar.';
@@ -55,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     saved.times.forEach(time => {
       const chip = document.createElement('span'); chip.textContent = time; $('savedTimes').append(chip);
     });
-    $('nextSchedule').textContent = saved.enabled ? nextLabel(saved.times) : 'Programação pausada. Nenhum novo aviso será iniciado.';
+    $('nextSchedule').textContent = saved.enabled ? nextLabel(saved.times, new Date(), saved.weekdays || ALL_DAYS) : 'Programação pausada. Nenhum novo aviso será iniciado.';
   }
   function clearToken() { $('deviceToken').value = ''; $('pairingResult').hidden = true; }
   async function deviceStatus() {
@@ -64,6 +72,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const { data, error } = await client.from('medtech_device_links').select('user_id,last_seen_at').eq('user_id', user.id).maybeSingle();
       if (error) throw error;
+      linked = Boolean(data);
+      $('pairDevice').textContent = linked ? 'Gerar nova chave do ESP32' : 'Gerar chave do ESP32';
       $('disconnectDevice').hidden = !data;
       if (!data) $('deviceStatus').textContent = 'Nenhum aparelho vinculado.';
       else if (!data.last_seen_at) $('deviceStatus').textContent = 'Chave criada. Aguardando a primeira conexão do ESP32.';
@@ -76,6 +86,47 @@ document.addEventListener('DOMContentLoaded', async () => {
       $('deviceStatus').textContent = 'Não foi possível consultar a conexão do aparelho.';
     } finally { statusPending = false; }
   }
+  WEEKDAYS.forEach((day, index) => {
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    input.type = 'checkbox'; input.value = index; input.checked = true;
+    label.append(input, document.createTextNode(day)); $('weekdayFields').append(label);
+  });
+  async function loadHistory(reset = false) {
+    if (historyPending) return;
+    historyPending = true;
+    $('refreshHistory').disabled = true; $('moreHistory').disabled = true;
+    if (reset) { historyOffset = 0; $('historyRows').replaceChildren(); $('historyTable').hidden = true; $('moreHistory').hidden = true; }
+    $('historyStatus').textContent = 'Carregando registros…';
+    try {
+      const { data, error } = await client.from('medtech_dose_history')
+        .select('id,occurred_at,medicine_name,status').eq('user_id', user.id)
+        .order('occurred_at', { ascending: false }).order('id', { ascending: false }).range(historyOffset, historyOffset + 49);
+      if (error) throw error;
+      const labels = { taken: 'Tomada confirmada', missed: 'Não tomada', dispensed: 'Dispensada', alerted: 'Aviso emitido' };
+      data.forEach(record => {
+        const row = document.createElement('tr');
+        const date = new Date(record.occurred_at);
+        const valid = Number.isFinite(date.getTime());
+        [valid ? date.toLocaleDateString('pt-BR', { timeZone: TIME_ZONE }) : 'Data indisponível',
+          valid ? date.toLocaleTimeString('pt-BR', { timeZone: TIME_ZONE, hour: '2-digit', minute: '2-digit' }) : '—',
+          record.medicine_name, labels[record.status] || record.status || 'Não informado'].forEach(value => {
+          const cell = document.createElement('td'); cell.textContent = value; row.append(cell);
+        });
+        $('historyRows').append(row);
+      });
+      historyOffset += data.length;
+      $('historyTable').hidden = historyOffset === 0;
+      $('historyStatus').textContent = historyOffset ? historyOffset + ' registro(s) exibido(s). Aviso ou dispensação não comprovam ingestão.' : 'Nenhuma dose registrada. Os registros aparecerão quando forem enviados pela integração do MedTech.';
+      $('moreHistory').hidden = data.length < 50;
+    } catch (error) {
+      $('historyStatus').textContent = ['42P01', 'PGRST205'].includes(error?.code)
+        ? 'O histórico de doses ainda não está disponível. Os registros serão exibidos quando essa função estiver habilitada.'
+        : 'Não foi possível carregar o histórico. Tente atualizar novamente.';
+    } finally { historyPending = false; $('refreshHistory').disabled = false; $('moreHistory').disabled = false; }
+  }
+  $('refreshHistory').onclick = () => loadHistory(true);
+  $('moreHistory').onclick = () => loadHistory();
   $('addTime').onclick = () => addTime('', true);
   addTime();
   $('todayLabel').textContent = new Intl.DateTimeFormat('pt-BR', { timeZone: TIME_ZONE, day: 'numeric', month: 'long' }).format(new Date());
@@ -99,25 +150,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     event.preventDefault();
     if (saving) return;
     const name = $('medicineName').value.trim();
-    let times;
+    let times, weekdays;
     try {
       if (!name || name.length > 80) throw new Error('Informe o nome do remédio, com até 80 caracteres.');
+      weekdays = supportsWeekdays ? normalizeDays([...$('weekdayFields').querySelectorAll('input:checked')].map(input => Number(input.value))) : ALL_DAYS;
       times = normalizeTimes([...$('timeFields').querySelectorAll('input')].map(input => input.value));
     } catch (error) { message(error.message, true); return; }
     saving = true; $('scheduleFields').disabled = true; $('saveSchedule').textContent = 'Salvando…';
     try {
-      const { data, error } = await client.from('medtech_schedule').upsert({
-        user_id: user.id, medicine_name: name, times, enabled: $('scheduleEnabled').checked
-      }, { onConflict: 'user_id' }).select('medicine_name,times,enabled,updated_at').single();
+      const payload = { user_id: user.id, medicine_name: name, times, enabled: $('scheduleEnabled').checked };
+      if (supportsWeekdays) payload.weekdays = weekdays;
+      const { data, error } = await client.from('medtech_schedule').upsert(payload, { onConflict: 'user_id' })
+        .select(supportsWeekdays ? weeklyColumns : dailyColumns).single();
       if (error) throw error;
       saved = data; renderSaved();
-      message('Programação salva na sua conta. O ESP32 conectado receberá a atualização na próxima consulta, em cerca de 30 segundos.');
+      message('Programação salva na sua conta. A sincronização depende da comunicação e do suporte semanal do ESP32.');
     } catch (error) { message(readableError(error), true); }
     finally { saving = false; $('scheduleFields').disabled = false; $('saveSchedule').textContent = 'Salvar programação'; updateTimeButtons(); }
   };
   $('pairDevice').onclick = async () => {
     if (pairing) return;
-    if (!$('pairingResult').hidden && !window.confirm('Gerar outra chave? A chave exibida agora deixará de funcionar.')) return;
+    if ((linked || !$('disconnectDevice').hidden || !$('pairingResult').hidden) && !window.confirm('Gerar outra chave? A chave anterior deixará de funcionar.')) return;
     pairing = true; $('pairDevice').disabled = true; clearToken();
     try {
       const bytes = new Uint8Array(32); crypto.getRandomValues(bytes);
@@ -144,18 +197,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     finally { pairing = false; $('disconnectDevice').disabled = false; $('pairDevice').disabled = false; }
   };
   try {
-    const { data, error } = await client.from('medtech_schedule').select('medicine_name,times,enabled,updated_at').eq('user_id', user.id).maybeSingle();
+    let result = await client.from('medtech_schedule').select(weeklyColumns).eq('user_id', user.id).maybeSingle();
+    if (missingWeekdays(result.error)) {
+      supportsWeekdays = false;
+      result = await client.from('medtech_schedule').select(dailyColumns).eq('user_id', user.id).maybeSingle();
+    }
+    const { data, error } = result;
     if (error) throw error;
     saved = data;
+    $('weekdaysHint').textContent = supportsWeekdays
+      ? 'Escolha os dias da semana e os horários, no horário de Brasília. A execução depende do suporte do aparelho.'
+      : 'Sua programação atual se repete todos os dias, no horário de Brasília. A seleção semanal ainda não está disponível.';
+    $('weekdayFields').querySelectorAll('input').forEach(input => { input.disabled = !supportsWeekdays; });
     if (data) {
+      $('weekdayFields').querySelectorAll('input').forEach(input => { input.checked = (data.weekdays || ALL_DAYS).includes(Number(input.value)); });
       $('medicineName').value = data.medicine_name; $('scheduleEnabled').checked = data.enabled;
       $('timeFields').replaceChildren(); data.times.forEach(time => addTime(time));
     }
-    renderSaved(); $('scheduleFields').disabled = false; $('pairDevice').disabled = false;
+    renderSaved(); $('scheduleFields').disabled = false;
     message(data ? 'Sua programação está carregada. Você pode alterar e salvar quando quiser.' : 'Comece preenchendo o nome do remédio e pelo menos um horário.');
-    await deviceStatus();
-    refreshTimer = setInterval(() => { if (!document.hidden) { deviceStatus(); renderSaved(); } }, 30000);
+
   } catch (error) { message(readableError(error), true); $('deviceStatus').textContent = 'Conexão disponível após ativar o cadastro.'; }
+  $('pairDevice').disabled = false;
+  await Promise.allSettled([deviceStatus(), loadHistory(true)]);
+  refreshTimer = setInterval(() => { if (!document.hidden) { deviceStatus(); renderSaved(); } }, 30000);
   window.addEventListener('pagehide', () => { clearToken(); clearInterval(refreshTimer); });
   window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
 });

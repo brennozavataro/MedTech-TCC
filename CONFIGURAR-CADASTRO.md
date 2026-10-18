@@ -2,7 +2,7 @@
 
 Este pacote substitui o cadastro simulado por integração com Supabase Auth.
 Ainda precisa de configuração externa. Não foi conectado a um projeto real nem
-foi testada a entrega de e-mails reais. O painel de medicamentos continua fictício.
+foi testada a entrega de e-mails reais. O painel de medicamentos usa dados do Supabase; veja CONFIGURAR-MEDICAMENTOS.md.
 
 ## 1. Criar e configurar o projeto
 
@@ -86,7 +86,7 @@ de e-mail; não comprova identidade civil nem bloqueia e-mails temporários.
 O HTML de um site estático é público. O bloqueio de navegação não protege arquivos
 nem dados por si só. Para armazenar medicamentos, pacientes e relatórios reais,
 crie tabelas com Row Level Security e políticas vinculadas ao auth.uid().
-Este pacote não adiciona tabelas clínicas nem grava os dados simulados do painel.
+A extensão de agenda semanal e histórico está documentada em CONFIGURAR-MEDICAMENTOS.md.
 
 ## Enviar ao GitHub
 

@@ -1,18 +1,19 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Painel do produto | MedTech</title><style>html.auth-pending body{visibility:hidden}</style><script>document.documentElement.classList.add("auth-pending")</script><noscript>Ative o JavaScript para acessar o painel.</noscript><script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script><script defer src="auth-config.js"></script><script defer src="auth.js"></script><script src="home.js"></script><script src="schedule-utils.js" defer></script><script src="dashboard.js" defer></script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="home.css"><link rel="stylesheet" href="dashboard.css"></head><body><header class="navbar" id="navbar"><div class="header-container"><div class="header-left"><a href="index.html" class="logo">Med<span>Tech</span></a><nav class="nav-links" id="navLinks"><a href="index.html" data-page="index" class="active" aria-current="page">Painel</a><a href="quemsomos.html" data-page="quemsomos">Quem somos</a><a href="dispositivos.html" data-page="dispositivos">Dispositivos</a><a href="referencias.html" data-page="referencias">Referências</a><a href="jogo.html" data-page="jogo">Jogo</a></nav></div><div class="header-right"><button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema claro e escuro" title="Alternar tema"><span class="theme-toggle-icon icon-sun"></span><span class="theme-toggle-icon icon-moon"></span></button><a class="header-account" id="signOut" href="cadastrar.html">Sair do painel</a><button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="navLinks"><span class="menu-toggle-bar"></span><span class="menu-toggle-bar"></span><span class="menu-toggle-bar"></span></button></div></div></header><main class="main-container dashboard-page">
   <div class="dash-header">
-    <div><span class="dash-eyebrow">MINHA ROTINA</span><h1>Meu medicamento</h1><p>Cadastre um remédio e os horários em que o MedTech deve avisar você.</p></div>
+    <div><span class="dash-eyebrow">MINHA ROTINA</span><h1>Meus medicamentos</h1><p>Cadastre um remédio e os horários em que o MedTech deve avisar você.</p></div>
     <div class="date-card"><span>Hoje · Brasília</span><strong id="todayLabel"></strong></div>
   </div>
   <div id="pageStatus" class="schedule-status" role="status" aria-live="polite">Carregando seu cadastro…</div>
   <div class="schedule-layout">
     <section class="dash-card" aria-labelledby="scheduleTitle">
       <span class="dash-eyebrow">CADASTRO</span><h2 id="scheduleTitle">Remédio e horários</h2>
-      <p class="schedule-description">Os horários se repetem todos os dias, no horário de Brasília.</p>
+      <p id="weekdaysHint" class="schedule-description">Escolha os dias da semana e os horários, no horário de Brasília. Para seguir os dias selecionados, o ESP32 precisa de firmware compatível com a programação semanal.</p>
       <form id="scheduleForm">
         <fieldset id="scheduleFields" disabled>
           <label for="medicineName">Nome do remédio</label>
           <input id="medicineName" name="medicine" type="text" maxlength="80" required autocomplete="off" placeholder="Digite o nome do remédio">
-          <div class="times-label"><span id="timesLabel">Horários diários</span><span>Até 12 horários</span></div>
+          <fieldset class="weekdays"><legend>Dias da semana</legend><div id="weekdayFields" class="weekday-options"></div></fieldset>
+          <div class="times-label"><span id="timesLabel">Horários dos dias selecionados</span><span>Até 12 horários</span></div>
           <div id="timeFields" role="group" aria-labelledby="timesLabel"></div>
           <button id="addTime" class="btn-secondary" type="button">+ Adicionar horário</button>
           <label class="schedule-toggle"><input id="scheduleEnabled" type="checkbox" checked> Programação ativa</label>
@@ -23,6 +24,7 @@
     <aside class="schedule-aside">
       <section class="dash-card schedule-summary" aria-labelledby="savedTitle">
         <span class="dash-eyebrow">SALVO NA SUA CONTA</span><h2 id="savedTitle">Nenhum remédio cadastrado</h2>
+        <p id="savedDays" class="schedule-description"></p>
         <div id="savedTimes" class="saved-times"></div>
         <p id="nextSchedule" class="schedule-description">Salve sua primeira programação para começar.</p>
       </section>
@@ -41,5 +43,12 @@
       </section>
     </aside>
   </div>
+  <section class="dash-card history-card" aria-labelledby="historyTitle">
+    <span class="dash-eyebrow">REGISTROS DA SUA CONTA</span><h2 id="historyTitle">Histórico de doses</h2>
+    <p class="schedule-description" id="historyStatus" role="status" aria-live="polite">Carregando registros…</p>
+    <div class="history-scroll" id="historyTable" hidden><table><caption>Registros de doses · horário de Brasília</caption><thead><tr><th scope="col">Data</th><th scope="col">Horário</th><th scope="col">Medicamento</th><th scope="col">Status</th></tr></thead><tbody id="historyRows"></tbody></table></div>
+    <button id="refreshHistory" class="btn-secondary" type="button">Atualizar histórico</button>
+    <button id="moreHistory" class="btn-secondary" type="button" hidden>Carregar mais</button>
+  </section>
   <p class="schedule-footnote">Primeira etapa do protótipo: programação e aviso no LCD. Esta versão não aciona bomba ou servo e não confirma que o medicamento foi tomado.</p>
 </main><footer class="site-footer"><div class="footer-container"><p>© 2026 MedTech · Projeto acadêmico 31C TI</p><nav class="footer-links"><a href="index.html">Site público</a><a href="referencias.html">Referências</a></nav></div></footer></body></html>

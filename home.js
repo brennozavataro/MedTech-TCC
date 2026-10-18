@@ -77,5 +77,3 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
-
-document.addEventListener('DOMContentLoaded',()=>{const account=document.querySelector('.header-account:not(#signOut)');if(!account)return;try{if(sessionStorage.getItem('medtech-demo-access')==='yes'){account.href='dashboard.html';account.textContent='Meu painel'}}catch{}});

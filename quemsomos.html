@@ -6,17 +6,17 @@
     <title>Quem somos | MedTech</title>
 
     <!-- Define o tema salvo antes de carregar o CSS, para não piscar -->
-    <script src="quemsomos.js"></script>
+    <script src="quemsomos.js"></script><script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script><script defer src="auth-config.js"></script><script defer src="auth.js"></script><script defer src="home-auth.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="quemsomos.css">
-</head>
+<link rel="stylesheet" href="header.css"><link rel="icon" href="data:,"></head>
 <body>
 
     <!-- Header / Barra de Navegação (igual em todas as páginas) -->
-    <header class="navbar" id="navbar"><div class="header-container"><div class="header-left"><a href="index.html" class="logo">Med<span>Tech</span></a><nav class="nav-links" id="navLinks"><a href="index.html" data-page="index">Painel</a><a href="quemsomos.html" data-page="quemsomos" class="active" aria-current="page">Quem somos</a><a href="dispositivos.html" data-page="dispositivos">Dispositivos</a><a href="referencias.html" data-page="referencias">Referências</a><a href="jogo.html" data-page="jogo">Jogo</a></nav></div><div class="header-right"><button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema claro e escuro" title="Alternar tema"><span class="theme-toggle-icon icon-sun"></span><span class="theme-toggle-icon icon-moon"></span></button><a class="header-account" href="cadastrar.html">Cadastrar</a><button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="navLinks"><span class="menu-toggle-bar"></span><span class="menu-toggle-bar"></span><span class="menu-toggle-bar"></span></button></div></div></header>
+    <header class="navbar" id="navbar"><div class="header-container"><div class="header-left"><a href="index.html" class="logo">Med<span>Tech</span></a><nav class="nav-links" id="navLinks"><a href="index.html" data-page="index">Painel</a><a href="quemsomos.html" data-page="quemsomos" class="active" aria-current="page">Quem somos</a><a href="dispositivos.html" data-page="dispositivos">Dispositivos</a><a href="referencias.html" data-page="referencias">Referências</a><a href="jogo.html" data-page="jogo">Jogo</a></nav></div><div class="header-right"><button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema claro e escuro" title="Alternar tema"><span class="theme-toggle-icon icon-sun"></span><span class="theme-toggle-icon icon-moon"></span></button><a class="header-account" href="cadastrar.html" data-header-account aria-busy="true" aria-disabled="true" tabindex="-1" style="pointer-events:none">Carregando…</a><button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="navLinks"><span class="menu-toggle-bar"></span><span class="menu-toggle-bar"></span><span class="menu-toggle-bar"></span></button></div></div></header>
 
     <main class="main-container">
 

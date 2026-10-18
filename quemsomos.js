@@ -91,5 +91,3 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 document.addEventListener('DOMContentLoaded',()=>{const f=document.getElementById('contactForm');if(f)f.addEventListener('submit',e=>{e.preventDefault();document.getElementById('contactStatus').textContent='Formulário demonstrativo. O envio ainda não está configurado.'})});
-
-document.addEventListener('DOMContentLoaded',()=>{const account=document.querySelector('.header-account:not(#signOut)');if(!account)return;try{if(sessionStorage.getItem('medtech-demo-access')==='yes'){account.href='dashboard.html';account.textContent='Meu painel'}}catch{}});

@@ -11,3 +11,6 @@ firmware/**/build/
 .env.*
 !.env.example
 .vercel/
+
+# Pacote local de entrega; manter fora do repositorio
+/entrega/

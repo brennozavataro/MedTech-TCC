@@ -1,0 +1,15 @@
+/* Mesma fonte variavel usada no index, com nome isolado para preservar o conteudo. */
+@font-face {
+  font-family: "MedTechHeader";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/inter/v20/UcCo3FwrK3iLTcviYwY.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* Dimensoes, espacamentos e breakpoints continuam nos estilos compartilhados existentes. */
+.navbar { --accent: #00DBE7; font-size: 1rem; font-weight: 400; line-height: normal; }
+.navbar, .navbar * { font-family: "MedTechHeader", "Inter", sans-serif; }
+.navbar button { font-weight: 600; }
+.navbar .nav-links a.active { color: var(--accent-blue); font-weight: 600; }
+html[data-theme="light"] .navbar { --accent: #00B4C2; }

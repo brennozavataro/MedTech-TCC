@@ -5,14 +5,15 @@ const vm=require('node:vm');
 const {parseHTML}=require(process.env.MEDTECH_LINKEDOM_PATH||'linkedom');
 const root=path.resolve(__dirname,'..');
 const schedule=require(path.join(root,'schedule-utils.js'));
-async function dashboard(weekly,otherError=false){
+async function dashboard(weekly,otherError=false,demo=false){
  const {document}=parseHTML(fs.readFileSync(path.join(root,'dashboard.html'),'utf8'));
  let init;document.addEventListener=(name,fn)=>{if(name==='DOMContentLoaded')init=fn;};
  const days=document.getElementById('weekdayFields');const originalQuery=days.querySelectorAll.bind(days);
  // LinkeDOM nao implementa a propriedade checked como o navegador.
  days.querySelectorAll=selector=>selector==='input:checked'?[...originalQuery('input')].filter(x=>x.checked):originalQuery(selector);
+ for(const id of ['actuationKind','servoChannel'])Object.defineProperty(document.getElementById(id),'value',{writable:true,value:''});
  const calls=[];let lastPayload;
- let row={medicine_name:'FIXTURE LOCAL',times:['08:00'],enabled:true,updated_at:'2026-10-18T10:00:00Z',...(weekly?{weekdays:[1,3,5]}:{})};
+ let row={medicine_name:'FIXTURE LOCAL',times:['08:00'],enabled:true,updated_at:'2026-10-18T10:00:00Z',...(weekly?{weekdays:[1,3,5]}:{}),...(demo?{actuation_kind:'tablet',servo_channel:0,volume_ml:null}:{})};
  class Query{
   constructor(table){this.table=table;this.columns='';}
   select(columns){this.columns=columns;return this;}
@@ -21,6 +22,7 @@ async function dashboard(weekly,otherError=false){
   async execute(){
    calls.push({table:this.table,columns:this.columns,payload:this.payload});
    if(this.table==='medtech_device_links')return {data:null,error:null};
+   if(this.table==='medtech_actuation_events')return {data:[],error:null};
    if(this.table==='medtech_dose_history')return {data:null,error:{code:'PGRST205'}};
    if(otherError)return {data:null,error:{code:'42703',message:'column medicine_name does not exist'}};
    if(!weekly&&this.columns.includes('weekdays'))return {data:null,error:{code:'42703',message:'column medtech_schedule.weekdays does not exist'}};
@@ -31,7 +33,7 @@ async function dashboard(weekly,otherError=false){
  }
  const client={from:table=>new Query(table),auth:{onAuthStateChange(){},signOut:async()=>({error:null})}};
  vm.runInNewContext(fs.readFileSync(path.join(root,'dashboard.js'),'utf8'),{
-  document,window:{addEventListener(){}},MedTechSchedule:schedule,MedTechAuth:{verifiedUser:async()=>({id:'FIXTURE_USER'}),getClient:()=>client},
+  document,window:{addEventListener(){}},MedTechSchedule:schedule,MedTechActuation:require('../actuation-utils.js'),MedTechAuth:{verifiedUser:async()=>({id:'FIXTURE_USER'}),getClient:()=>client},
   location:{replace(){throw Error('Redirecionamento inesperado');}},setInterval:()=>0,clearInterval(){},console
  });
  await init();
@@ -39,11 +41,19 @@ async function dashboard(weekly,otherError=false){
  assert.equal(document.getElementById('medicineName').value,'FIXTURE LOCAL');
  assert.equal(document.getElementById('scheduleFields').disabled,false);
  assert.equal(document.getElementById('deviceStatus').textContent,'Nenhum aparelho vinculado.');
- assert.match(document.getElementById('historyStatus').textContent,/ainda não está disponível/);
+ if(!demo)assert.match(document.getElementById('historyStatus').textContent,/ainda não está disponível/);
+ else assert.match(document.getElementById('historyTitle').textContent,/acionamentos/);
  for(const input of days.querySelectorAll('input'))assert.equal(input.disabled,!weekly);
  await document.getElementById('scheduleForm').onsubmit({preventDefault(){}});
  assert.ok(lastPayload,'Salvamento deve funcionar sem alterar schema');
  assert.equal(Object.hasOwn(lastPayload,'weekdays'),weekly);
+ if(demo){
+  assert.equal(lastPayload.actuation_kind,'tablet');assert.equal(lastPayload.servo_channel,0);assert.equal(lastPayload.volume_ml,null);
+  document.getElementById('actuationKind').value='liquid';document.getElementById('volumeMl').value='6';
+  await document.getElementById('scheduleForm').onsubmit({preventDefault(){}});
+  assert.equal(lastPayload.actuation_kind,'liquid');assert.equal(lastPayload.volume_ml,6);assert.equal(lastPayload.servo_channel,null);
+  const before=lastPayload;document.getElementById('volumeMl').value='7';await document.getElementById('scheduleForm').onsubmit({preventDefault(){}});assert.equal(lastPayload,before,'Volume acima do limite nao e salvo');
+ }
  if(weekly){assert.deepEqual(Array.from(lastPayload.weekdays),[1,3,5]);}
  else assert.match(document.getElementById('weekdaysHint').textContent,/todos os dias/);
 }
@@ -57,7 +67,7 @@ async function home(){
  let resolve;ctx.MedTechAuth.verifiedUser=()=>new Promise(r=>resolve=r);listeners.focus();authEvent('SIGNED_OUT');resolve({id:'STALE_SESSION'});await new Promise(setImmediate);assert.equal(account.textContent,'Cadastrar');
 }
 (async()=>{
- await dashboard(false);await dashboard(true);await dashboard(false,true);await home();
+ await dashboard(false);await dashboard(true);await dashboard(true,false,true);await dashboard(false,true);await home();
  assert.deepEqual(schedule.normalizeTimes(['20:00','08:00']),['08:00','20:00']);
  assert.throws(()=>schedule.normalizeDays([]));assert.throws(()=>schedule.normalizeTimes(['25:00']));
  assert.match(schedule.nextLabel(['09:00'],new Date('2026-10-19T13:00:00Z'),[2]),/amanhã/);

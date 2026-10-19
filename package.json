@@ -1,0 +1,12 @@
+{
+  "name": "medtech-tcc-demo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node tests/demo-v1.test.cjs && node tests/site-release.test.cjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.10",
+    "linkedom": "0.18.13"
+  }
+}

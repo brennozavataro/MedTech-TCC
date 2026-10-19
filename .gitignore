@@ -1,16 +1,44 @@
-
-# Configuracao local do ESP32; nunca versionar credenciais
-firmware/**/secrets.h
-firmware/**/secrets.local.h
-firmware/**/build/
-
-# Credenciais locais em qualquer pasta e metadados privados de ferramentas
+# Credenciais locais; exemplos publicos continuam permitidos
 **/secrets.h
 **/secrets.local.h
 .env
 .env.*
 !.env.example
+*.key
+*.p12
+*.pfx
 .vercel/
 
-# Pacote local de entrega; manter fora do repositorio
+# Dependencias, compilacao e temporarios
+node_modules/
+build/
+.pio/
+*.bin
+*.elf
+*.hex
+*.uf2
+*.o
+*.a
+*.map
+*.tmp
+*.temp
+*.log
+.DS_Store
+Thumbs.db
+
+# Pacotes e copias de entrega locais
+*.zip
+*.7z
+*.tar
+*.gz
 /entrega/
+
+# Resultados de testes/validacao, nao seus fontes
+coverage/
+test-results/
+playwright-report/
+/VALIDACAO-DEMO-V1.txt
+/firmware/VALIDACAO.md
+
+# Etapa intermediaria preservada localmente; fonte atual: MedTechDemoV1
+/firmware/MedTechCalibracao/

@@ -5,7 +5,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   const status = $('pageStatus');
   let user, client, saved = null, saving = false, pairing = false, statusPending = false;
   let refreshTimer;
-  let supportsWeekdays = true;
+  let supportsWeekdays = true, supportsActuation = false;
+  const actionColumns = 'actuation_kind,servo_channel,volume_ml';
+  function actionFields() {
+    $('servoChoice').hidden = $('actuationKind').value !== 'tablet';
+    $('volumeChoice').hidden = $('actuationKind').value !== 'liquid';
+    $('servoChannel').disabled = $('servoChoice').hidden;
+    $('servoChannel').required = !$('servoChoice').hidden;
+    $('volumeMl').disabled = $('volumeChoice').hidden;
+    $('volumeMl').required = !$('volumeChoice').hidden;
+  }
+  $('actuationKind').onchange = actionFields;
+  actionFields();
   const dailyColumns = "medicine_name,times,enabled,updated_at";
   const weeklyColumns = "medicine_name,times,weekdays,enabled,updated_at";
   function missingWeekdays(error) {
@@ -60,6 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     $('savedTitle').textContent = saved.medicine_name;
+    $('savedActuation').textContent = saved.actuation_kind === 'tablet' ? 'Objeto de teste · canal ' + saved.servo_channel : saved.actuation_kind === 'liquid' ? 'Água · volume solicitado ' + saved.volume_ml + ' mL (vazão provisória)' : 'Sem acionamento configurado.';
     saved.times.forEach(time => {
       const chip = document.createElement('span'); chip.textContent = time; $('savedTimes').append(chip);
     });
@@ -99,11 +111,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (reset) { historyOffset = 0; $('historyRows').replaceChildren(); $('historyTable').hidden = true; $('moreHistory').hidden = true; }
     $('historyStatus').textContent = 'Carregando registros…';
     try {
-      const { data, error } = await client.from('medtech_dose_history')
+      const { data, error } = await client.from(supportsActuation ? 'medtech_actuation_events' : 'medtech_dose_history')
         .select('id,occurred_at,medicine_name,status').eq('user_id', user.id)
         .order('occurred_at', { ascending: false }).order('id', { ascending: false }).range(historyOffset, historyOffset + 49);
       if (error) throw error;
-      const labels = { taken: 'Tomada confirmada', missed: 'Não tomada', dispensed: 'Dispensada', alerted: 'Aviso emitido' };
+      const labels = { reserved: 'Reservado; execução não confirmada', cycle_executed_unconfirmed: 'Ciclo executado; sem confirmação física', interrupted_unknown: 'Interrompido; resultado físico desconhecido', skipped: 'Acionamento não iniciado', taken: 'Tomada confirmada', missed: 'Não tomada', dispensed: 'Dispensada', alerted: 'Aviso emitido' };
       data.forEach(record => {
         const row = document.createElement('tr');
         const date = new Date(record.occurred_at);
@@ -117,11 +129,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       historyOffset += data.length;
       $('historyTable').hidden = historyOffset === 0;
-      $('historyStatus').textContent = historyOffset ? historyOffset + ' registro(s) exibido(s). Aviso ou dispensação não comprovam ingestão.' : 'Nenhuma dose registrada. Os registros aparecerão quando forem enviados pela integração do MedTech.';
+      $('historyStatus').textContent = historyOffset ? historyOffset + ' registro(s) exibido(s). Aviso ou dispensação não comprovam ingestão.' : (supportsActuation ? 'Nenhum acionamento registrado. Sem confirmação física ou de ingestão.' : 'Nenhuma dose registrada. Os registros aparecerão quando forem enviados pela integração do MedTech.');
       $('moreHistory').hidden = data.length < 50;
     } catch (error) {
       $('historyStatus').textContent = ['42P01', 'PGRST205'].includes(error?.code)
-        ? 'O histórico de doses ainda não está disponível. Os registros serão exibidos quando essa função estiver habilitada.'
+        ? (supportsActuation ? 'O histórico de acionamentos ainda não está disponível. Confira a migração demo-v1.' : 'O histórico de doses ainda não está disponível. Os registros serão exibidos quando essa função estiver habilitada.')
         : 'Não foi possível carregar o histórico. Tente atualizar novamente.';
     } finally { historyPending = false; $('refreshHistory').disabled = false; $('moreHistory').disabled = false; }
   }
@@ -150,18 +162,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     event.preventDefault();
     if (saving) return;
     const name = $('medicineName').value.trim();
-    let times, weekdays;
+    let times, weekdays, action = {};
     try {
       if (!name || name.length > 80) throw new Error('Informe o nome do remédio, com até 80 caracteres.');
+      if (supportsActuation) action = MedTechActuation.normalize($('actuationKind').value, $('servoChannel').value, $('volumeMl').value);
       weekdays = supportsWeekdays ? normalizeDays([...$('weekdayFields').querySelectorAll('input:checked')].map(input => Number(input.value))) : ALL_DAYS;
       times = normalizeTimes([...$('timeFields').querySelectorAll('input')].map(input => input.value));
     } catch (error) { message(error.message, true); return; }
     saving = true; $('scheduleFields').disabled = true; $('saveSchedule').textContent = 'Salvando…';
     try {
       const payload = { user_id: user.id, medicine_name: name, times, enabled: $('scheduleEnabled').checked };
+      Object.assign(payload, action);
       if (supportsWeekdays) payload.weekdays = weekdays;
       const { data, error } = await client.from('medtech_schedule').upsert(payload, { onConflict: 'user_id' })
-        .select(supportsWeekdays ? weeklyColumns : dailyColumns).single();
+        .select((supportsWeekdays ? weeklyColumns : dailyColumns) + (supportsActuation ? ',' + actionColumns : '')).single();
       if (error) throw error;
       saved = data; renderSaved();
       message('Programação salva na sua conta. A sincronização depende da comunicação e do suporte semanal do ESP32.');
@@ -205,6 +219,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { data, error } = result;
     if (error) throw error;
     saved = data;
+    const actionResult = await client.from('medtech_schedule').select(actionColumns).eq('user_id', user.id).maybeSingle();
+    if (actionResult.error && !(['42703','PGRST204'].includes(actionResult.error.code) && /actuation_kind|servo_channel|volume_ml/i.test((actionResult.error.message || '') + (actionResult.error.details || '')))) throw actionResult.error;
+    supportsActuation = !actionResult.error && (!actionResult.data || Object.hasOwn(actionResult.data, 'actuation_kind'));
+    $('actuationFields').disabled = !supportsActuation;
+    $('actuationHint').textContent = supportsActuation ? 'Somente água e objetos de teste. Valores provisórios; sem confirmação física. Um tipo de saída por programação.' : 'Acionamento indisponível: a migração demo-v1 ainda não foi instalada. A programação existente continua disponível.';
+    if (supportsActuation) {
+      if (saved) Object.assign(saved, actionResult.data);
+      $('actuationKind').value = actionResult.data?.actuation_kind || '';
+      $('servoChannel').value = actionResult.data?.servo_channel == null ? '' : String(actionResult.data.servo_channel);
+      $('volumeMl').value = actionResult.data?.volume_ml == null ? '' : String(actionResult.data.volume_ml);
+      actionFields();
+      $('historyTitle').textContent = 'Histórico de acionamentos de teste';
+      $('historyTable').querySelector('caption').textContent = 'Ciclos de teste · horário de Brasília · sem confirmação física';
+    }
     $('weekdaysHint').textContent = supportsWeekdays
       ? 'Escolha os dias da semana e os horários, no horário de Brasília. A execução depende do suporte do aparelho.'
       : 'Sua programação atual se repete todos os dias, no horário de Brasília. A seleção semanal ainda não está disponível.';

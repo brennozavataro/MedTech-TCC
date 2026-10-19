@@ -1,0 +1,18 @@
+
+# MedTech TCC — demonstração v1.0
+
+Use somente água e objetos de teste, sem medicamentos. Não há sensor: acionamento não confirma volume real, saída de um objeto, travamento ou ingestão.
+
+1. **Supabase:** o SQL está apenas preparado. Revise e aplique manualmente supabase/medtech-demo-v1.sql no projeto existente. Reutiliza medtech_schedule, medtech_device_links e medtech_device_schedule; preserva pareamento, amplia o cadastro e adiciona reserva/finalização de acionamentos. Requer tabelas, autenticação e políticas RLS originais. A verificação inicial interrompe a transação se tipos, RLS ou RPCs originais divergirem. Sem a migração, não há acionamento. Cadastros antigos permanecem sem tipo de saída até serem editados.
+2. **Site:** os arquivos estão na raiz do ZIP. Sirva por HTTP (exemplo: npx --yes http-server . -p 8080) e abra http://localhost:8080. Entre na conta vinculada ao ESP32. Há UMA programação por conta, até 12 horários: escolha comprimido/objeto e canal 0–6 OU líquido/água e volume maior que zero até 6 mL. O mesmo evento não aciona ambos.
+3. **Arduino:** envie a pasta firmware/MedTechDemoV1 extraída deste ZIP, sem secrets.h. Guarde o secrets.h anterior, use esta nova pasta separada (não misture arquivos .ino das versões) e copie o secrets.h para ela. Abra firmware/MedTechDemoV1/MedTechDemoV1.ino. Use a placa/configuração que funcionou, ArduinoJson 7 e LiquidCrystal. Wire, Preferences e esp_timer acompanham ESP32. Copie seu secrets.h que funcionou para essa pasta ou preencha uma cópia de secrets.example.h. O ZIP não inclui credenciais privadas.
+4. **Valores provisórios:** demo_config.h centraliza fechado/aberto por canal (0°/90°, apenas relatados), abertura de 1000 ms e espera de fechamento de 500 ms (escolhas provisórias), vazão informada de 1,5 mL/s e limite de 4000 ms. Não são calibração comprovada. Confirme curso livre antes de alimentar os servos. Mantidos: PCA 0x40, SDA 21/SCL 22, 50 Hz, pulsos 110–510; bomba 12 V, relê GPIO 18 ativo LOW.
+5. **Apresentação:** desligue totalmente a montagem antes de trocar o firmware para eliminar pulsos antigos. Grave sem potência dos atuadores. O boot fica desarmado, sem comandar ângulos. No Monitor Serial, 115200 baud com fim de linha, envie DEMO ARMAR; isso inicializa sinais desligados. Depois alimente corretamente os atuadores e salve no site um horário pelo menos 2 minutos à frente. DEMO PARAR interrompe/desarma. Reiniciar exige armar novamente.
+
+**Ciclo:** apenas o servo escolhido abre, aguarda, recebe o ângulo fechado e perde PWM. A bomba usa tempo calculado pela vazão provisória, nunca acima de 4 s, com timer independente do HTTPS. Até 6 mL são apenas estimados. Remover PWM não assegura fechamento/sustentação da porta; defeito elétrico, relê colado ou travamento total exigem corte físico da alimentação.
+
+**Repetição e falhas:** reserva única por conta/minuto no servidor e marcador NVS antes de acionar. Reinício/resposta perdida podem perder um ciclo, mas não o repetem. A primeira consulta ao iniciar/armar/reconectar descarta o minuto corrente e anteriores. Pendência bloqueia novos ciclos até sincronizar; não há reposição automática. Não apague NVS nem o ledger.
+
+**Registros:** o painel mostra reservado/execução incerta, ciclo executado sem confirmação física, interrompido/resultado desconhecido ou não iniciado. Não cria registros de ingestão ou dispensação confirmada. Encerramentos offline ficam em NVS para envio posterior.
+
+**Validação:** resultados no relatório local VALIDACAO-DEMO-V1.txt. Para repetir os testes do pacote: npm install, depois npm test. Nenhum deploy, alteração remota ou gravação de placa foi feito. Ainda é necessário um ensaio físico com água e objetos.
